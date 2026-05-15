@@ -4,6 +4,25 @@ import os
 import sys
 
 
+BASE_DIR = os.path.dirname(os.path.abspath(__file__))
+
+BINARY = (
+    os.path.join(BASE_DIR, "dicegen.exe")
+    if os.name == "nt"
+    else os.path.join(BASE_DIR, "dicegen")
+)
+
+WORDLISTS = {
+    4: os.path.join(BASE_DIR, "eff_short_wordlist_2_0.txt"),
+    5: os.path.join(BASE_DIR, "eff_large_wordlist.txt"),
+}
+
+
+def error(message):
+    print(f"[ERROR] {message}")
+    sys.exit(1)
+
+
 def load_wordlist(path):
 
     words = {}
@@ -14,63 +33,38 @@ def load_wordlist(path):
 
             for line in f:
 
-                parts = line.strip().split()
+                code, word = line.strip().split(maxsplit=1)
 
-                if len(parts) >= 2:
-
-                    code = parts[0]
-                    word = parts[1]
-
-                    words[code] = word
+                words[code] = word
 
     except FileNotFoundError:
-        print(f"[ERROR] Wordlist file not found: {path}")
-        sys.exit(1)
-
-    except PermissionError:
-        print(f"[ERROR] Permission denied reading: {path}")
-        sys.exit(1)
+        error(f"Wordlist not found: {path}")
 
     except Exception as e:
-        print(f"[ERROR] Failed to load wordlist: {e}")
-        sys.exit(1)
-
-    if not words:
-        print("[ERROR] Wordlist is empty or invalid")
-        sys.exit(1)
+        error(f"Failed loading wordlist: {e}")
 
     return words
 
 
-def get_code(binary, width):
+def get_code(width):
 
     try:
 
         result = subprocess.check_output(
-            [binary, str(width)],
+            [BINARY, str(width)],
             stderr=subprocess.STDOUT
         )
 
-        code = result.decode().strip()
-
-        return code
+        return result.decode().strip()
 
     except FileNotFoundError:
-        print(f"[ERROR] RNG binary not found: {binary}")
-        sys.exit(1)
-
-    except PermissionError:
-        print(f"[ERROR] Permission denied executing: {binary}")
-        sys.exit(1)
+        error(f"RNG binary not found: {BINARY}")
 
     except subprocess.CalledProcessError as e:
-        print("[ERROR] RNG binary execution failed")
-        print(e.output.decode(errors="ignore"))
-        sys.exit(1)
+        error(e.output.decode(errors="ignore"))
 
     except Exception as e:
-        print(f"[ERROR] Failed running RNG binary: {e}")
-        sys.exit(1)
+        error(f"Failed running RNG binary: {e}")
 
 
 def main():
@@ -83,7 +77,8 @@ def main():
         "-w",
         type=int,
         default=5,
-        help="digits per code"
+        choices=[4, 5],
+        help="4 = short list, 5 = large list"
     )
 
     parser.add_argument(
@@ -93,73 +88,38 @@ def main():
         help="number of words"
     )
 
-    parser.add_argument(
-        "-source",
-        required=True,
-        help="wordlist file"
-    )
-
-    parser.add_argument(
-        "-bin",
-        default="./dicegen",
-        help="C RNG binary"
-    )
-
     args = parser.parse_args()
 
-    # Validate width
-    if args.w <= 0:
-        print("[ERROR] Width must be greater than 0")
-        sys.exit(1)
-
-    # Validate word count
     if args.n <= 0:
-        print("[ERROR] Number of words must be greater than 0")
-        sys.exit(1)
+        error("Number of words must be greater than 0")
 
-    # Check binary exists
-    if not os.path.isfile(args.bin):
-        print(f"[ERROR] Binary file does not exist: {args.bin}")
-        sys.exit(1)
+    if not os.path.isfile(BINARY):
+        error(f"Missing RNG binary: {BINARY}")
 
-    # Check source exists
-    if not os.path.isfile(args.source):
-        print(f"[ERROR] Wordlist file does not exist: {args.source}")
-        sys.exit(1)
+    wordlist_path = WORDLISTS[args.w]
 
-    wordlist = load_wordlist(args.source)
+    if not os.path.isfile(wordlist_path):
+        error(f"Missing wordlist: {wordlist_path}")
 
-    passphrase = []
+    wordlist = load_wordlist(wordlist_path)
+
+    words = []
 
     print("\nGenerated values:\n")
 
     for _ in range(args.n):
 
-        code = get_code(args.bin, args.w)
+        code = get_code(args.w)
 
-        print(code, end="")
+        word = wordlist.get(code, "missing")
 
-        word = wordlist.get(code)
+        print(f"{code} -> {word}")
 
-        if word:
+        words.append(word)
 
-            print(f" -> {word}")
+    print("\nPassphrase:\n")
 
-            passphrase.append(word)
-
-        else:
-
-            print(" -> missing")
-
-    if passphrase:
-
-        print("\nPassphrase:\n")
-
-        print(" ".join(passphrase))
-
-    else:
-
-        print("\n[ERROR] No valid passphrase generated")
+    print("-".join(words))
 
 
 if __name__ == "__main__":

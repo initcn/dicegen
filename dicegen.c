@@ -81,7 +81,3 @@ int main(int argc, char *argv[]) {
 
     return 0;
 }
-
-// gcc dicegen.c -o dicegen
-// gcc dicegen.c -lbcrypt -o dicegen.exe
-

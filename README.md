@@ -1,78 +1,62 @@
 # Secure Diceware Passphrase Generator
 
-A cross-platform secure Diceware passphrase generator using:
+Cross-platform Diceware passphrase generator using:
 
-- Cryptographically secure randomness
+- Cryptographically secure OS randomness
 - Bias-free dice generation
 - EFF Diceware wordlists
-- C-based entropy generation
-- Python-based passphrase generation
+- C entropy backend
+- Python automation
 
 Supports:
 - Linux
 - Windows
 
-The project follows the Diceware methodology recommended by the Electronic Frontier Foundation (EFF).
+Based on the Diceware methodology recommended by the EFF.
 
 # References
 
-EFF Diceware Guide
-
+EFF Diceware Guide  
 https://www.eff.org/dice
 
-EFF Diceware PDF
-
+EFF Diceware PDF  
 https://www.eff.org/files/2025/08/19/diceware.pdf
 
-EFF Large Wordlist
-
+EFF Large Wordlist  
 https://www.eff.org/files/2016/07/18/eff_large_wordlist.txt
 
-EFF Short Wordlist
-
+EFF Short Wordlist  
 https://www.eff.org/files/2016/09/08/eff_short_wordlist_2_0.txt
 
-The creator of the EFF wordlists, Joseph Bonneau, has written a detailed explanation of passphrase security and the methodology used to create the EFF Diceware wordlists:
-
+EFF Wordlist Methodology  
 https://www.eff.org/wordlist
 
-# How Diceware Works
+# How It Works
 
-For most applications, EFF recommends generating a six-word passphrase using the large EFF wordlist.
+1. Generate secure dice rolls.
+2. Convert rolls into Diceware codes.
+3. Map codes to EFF words.
+4. Build a passphrase.
 
-Generation method:
-
-1. Roll five dice.
-2. Record the results left to right.
-3. Example:
-
-```text
-43463
-```
-4. Look up `43463` in the EFF wordlist.
-5. You may get a word like:
+Example:
 
 ```text
-panoramic
+43463 -> panoramic
+21563 -> fossil
+63142 -> nectar
 ```
 
-6. Repeat the process six times.
-
-Example passphrase:
+Generated passphrase:
 
 ```text
-panoramic nectar precut smith banana handclap
+panoramic-fossil-nectar
 ```
 
-This method produces approximately:
+A 6-word passphrase using the EFF large wordlist provides approximately:
 
 ```text
-2^77
+~77 bits entropy
 ```
-
-possible combinations for a six-word passphrase using the large EFF wordlist.
-
-This provides strong resistance against brute-force attacks.
 
 # Project Structure
 
@@ -83,52 +67,44 @@ eff_large_wordlist.txt
 eff_short_wordlist_2_0.txt
 ```
 
-# Security Properties
+# Security
 
-This project uses:
-
+Uses:
 - Linux `getrandom()`
 - Windows `BCryptGenRandom()`
 - Rejection sampling to remove modulo bias
 - Cryptographically secure operating system entropy
 
-This project does NOT use:
-
+Does NOT use:
 - `rand()`
 - pseudo-random generators
-- time-based seeding
+- time-based seeds
 
-# Compile the C RNG Generator
+# Compile
 
 ## Linux
-
-Compile:
 
 ```bash
 gcc dicegen.c -o dicegen
 ```
 
-Run manually:
+## Windows (MinGW GCC)
+
+```powershell
+gcc dicegen.c -lbcrypt -o dicegen.exe
+```
+
+# Manual Diceware
+
+Generate a Diceware code manually:
+
+## Linux
 
 ```bash
 ./dicegen 5
 ```
 
-Example output:
-
-```text
-43463
-```
-
-## Windows (MinGW GCC)
-
-Compile:
-
-```bash
-gcc dicegen.c -lbcrypt -o dicegen.exe
-```
-
-Run manually:
+## Windows
 
 ```powershell
 .\dicegen.exe 5
@@ -140,71 +116,49 @@ Example output:
 43463
 ```
 
-# Manual Diceware Workflow
-
-You can use the C program manually.
-
-Example:
-
-```bash
-./dicegen 5
-```
-
-Output:
-
-```text
-43463
-```
-
-Open the EFF wordlist and look up:
-
-```text
-43463
-```
-
-You may get:
-
-```text
-panoramic
-```
-
-Repeat six times to generate a secure passphrase.
+Look up the code in the EFF wordlist.
 
 # Automatic Passphrase Generation
 
-The Python script automates:
-
-- dice generation
-- word lookup
-- passphrase assembly
-
-The Python script uses the C RNG binary as its entropy source.
-
-# Python Requirements
-
-Python 3 required.
-
-No third-party libraries needed.
-
-# Usage
-
 ## Large EFF Wordlist
 
-Recommended for maximum security.
-
-Linux:
-
 ```bash
-python3 gen_passphrase.py -w 5 -n 6 -source eff_large_wordlist.txt -bin dicegen
+python3 gen_passphrase.py -w 5 -n 6
 ```
 
 Windows:
 
 ```powershell
-python gen_passphrase.py -w 5 -n 6 -source eff_large_wordlist.txt -bin dicegen.exe
+python gen_passphrase.py -w 5 -n 6
 ```
 
-Example output:
+## Short EFF Wordlist
+
+```bash
+python3 gen_passphrase.py -w 4 -n 6
+```
+
+Windows:
+
+```powershell
+python gen_passphrase.py -w 4 -n 6
+```
+
+# Parameters
+
+| Parameter | Description |
+|---|---|
+| `-w` | 4 = short wordlist, 5 = large wordlist |
+| `-n` | Number of words |
+
+# Recommended Settings
+
+| Wordlist | Words |
+|---|---|
+| EFF Large | 6–8 |
+| EFF Short | 7–9 |
+
+# Example Output
 
 ```text
 52316 -> lunar
@@ -216,76 +170,66 @@ Example output:
 
 Passphrase:
 
-lunar canyon velvet orbit fossil nectar
-```
-
-## Short EFF Wordlist
-
-Uses 4 dice rolls per word.
-
-Linux:
-
-```bash
-python3 gen_passphrase.py -w 4 -n 6 -source eff_short_wordlist_2_0.txt -bin dicegen
-```
-
-Windows:
-
-```powershell
-python gen_passphrase.py -w 4 -n 6 -source eff_short_wordlist_2_0.txt -bin dicegen.exe
-```
-
-# Parameters
-
-| Parameter | Description |
-|---|---|
-| `-w` | Digits per code |
-| `-n` | Number of words |
-| `-source` | Wordlist file |
-| `-bin` | RNG binary |
-
-# Recommended Settings
-
-| Wordlist | Width | Recommended Words |
-|---|---|---|
-| EFF Large | 5 | 6–8 |
-| EFF Short | 4 | 7–9 |
-
-# Entropy
-
-EFF Large Wordlist:
-
-```text
-7776 words
-~12.9 bits entropy per word
-```
-
-Six-word passphrase:
-
-```text
-~77 bits entropy
-```
-
-# Example Mnemonic
-
-Example passphrase:
-
-```text
-panoramic nectar precut smith banana handclap
+lunar-canyon-velvet-orbit-fossil-nectar
 ```
 
 Example mnemonic:
 
 ```text
-The panoramic view, as I tasted the nectar of a precut granny smith apple and banana, deserved a handclap.
+A lunar canyon covered in velvet orbited a fossil filled with nectar.
 ```
+
+Creating a memorable sentence or mental image can help remember long Diceware passphrases without reducing entropy.
+
+# Password Managers
+
+It is strongly recommended to use a password manager instead of reusing passwords or memorizing many passwords manually.
+
+Recommended password managers:
+
+- Bitwarden
+- Proton Pass
+- KeePass
+
+Diceware passphrases work especially well as master passwords for password managers because they provide high entropy while remaining easier to remember than short complex passwords.
+
+Example Diceware master password:
+
+```text
+lunar-canyon-velvet-orbit-fossil-nectar
+```
+
+Compared to a traditional password like:
+
+```text
+X7$qP!2zL@
+```
+
+a Diceware passphrase is:
+- easier to remember
+- easier to type
+- harder to brute-force when sufficiently long
+
+Using a password manager allows:
+- unique passwords for every account
+- secure password storage
+- strong random password generation
+- reduced password reuse
+- safer long-term credential management
+
+Diceware passphrases are especially useful for:
+- password manager master passwords
+- encryption passwords
+- recovery keys
+- offline vault passwords
+- full-disk encryption passwords
 
 # Notes
 
-- The C program only generates secure dice codes.
+- The C program only generates secure Diceware codes.
 - The Python script handles word lookup and passphrase generation.
-- Keeping entropy generation separate improves simplicity and auditability.
 - All randomness originates from the operating system cryptographic RNG.
+- Modulo bias is removed using rejection sampling.
 
 # License
 
