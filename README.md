@@ -202,21 +202,13 @@ Recommended for maximum security.
 Linux:
 
 ```bash
-python3 gen_passphrase.py \
--w 5 \
--n 6 \
--source eff_large_wordlist.txt \
--bin ./dicegen
+python3 gen_passphrase.py -w 5 -n 6 -source eff_large_wordlist.txt -bin dicegen
 ```
 
 Windows:
 
 ```powershell
-python gen_passphrase.py ^
--w 5 ^
--n 6 ^
--source eff_large_wordlist.txt ^
--bin dicegen.exe
+python gen_passphrase.py -w 5 -n 6 -source eff_large_wordlist.txt -bin dicegen.exe
 ```
 
 Example output:
@@ -241,21 +233,13 @@ Uses 4 dice rolls per word.
 Linux:
 
 ```bash
-python3 gen_passphrase.py \
--w 4 \
--n 6 \
--source eff_short_wordlist_2_0.txt \
--bin ./dicegen
+python3 gen_passphrase.py -w 4 -n 6 -source eff_short_wordlist_2_0.txt -bin dicegen
 ```
 
 Windows:
 
 ```powershell
-python gen_passphrase.py ^
--w 4 ^
--n 6 ^
--source eff_short_wordlist_2_0.txt ^
--bin dicegen.exe
+python gen_passphrase.py -w 4 -n 6 -source eff_short_wordlist_2_0.txt -bin dicegen.exe
 ```
 
 # Parameters
