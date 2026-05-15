@@ -47,23 +47,16 @@ Generation method:
 3. Example:
 
 ```text
-4 3 4 6 3
-```
-
-4. Convert this into:
-
-```text
 43463
 ```
-
-5. Look up `43463` in the EFF wordlist.
-6. You may get a word like:
+4. Look up `43463` in the EFF wordlist.
+5. You may get a word like:
 
 ```text
 panoramic
 ```
 
-7. Repeat the process six times.
+6. Repeat the process six times.
 
 Example passphrase:
 
