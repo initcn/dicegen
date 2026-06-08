@@ -26,7 +26,7 @@ def load_wordlist(path: Path) -> dict:
 def main():
     parser = argparse.ArgumentParser(description="Secure Diceware generator")
     parser.add_argument('-w', '--width', type=int, choices=[4, 5], default=5)
-    parser.add_argument('-n', '--num-words', type=int, default=7)
+    parser.add_argument('-n', '--num-words', type=int, default=6)
     parser.add_argument('-s', '--sep', default=' ')
     parser.add_argument('-q', '--quiet', action='store_true')
     args = parser.parse_args()
