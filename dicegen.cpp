@@ -5,17 +5,7 @@
 #include <unordered_map>
 #include <sstream>
 #include <cstdlib>
-
-// OS-specific secure random headers
-#ifdef _WIN32
-    #include <windows.h>
-    #include <bcrypt.h>
-    #pragma comment(lib, "bcrypt.lib")
-#else
-    #include <sys/random.h>
-    #include <errno.h>
-    #include <unistd.h>
-#endif
+#include <random> // Modern C++ secure random
 
 // Extract the directory path of the executable
 std::string get_base_dir(const std::string& exec_path) {
@@ -24,47 +14,23 @@ std::string get_base_dir(const std::string& exec_path) {
     return exec_path.substr(0, pos);
 }
 
-// Generate a cryptographically secure random byte
-int secure_random_byte(unsigned char *b) {
-#ifdef _WIN32
-    if (BCryptGenRandom(NULL, b, 1, BCRYPT_USE_SYSTEM_PREFERRED_RNG) != 0) {
-        return -1;
-    }
-#else
-    ssize_t result;
-    do {
-        result = getrandom(b, 1, 0);
-    } while (result == -1 && errno == EINTR);
-
-    if (result != 1) {
-        return -1;
-    }
-#endif
-    return 0;
-}
-
-// Roll a standard 6-sided die securely, avoiding modulo bias
+// Roll a standard 6-sided die securely using modern C++
 int roll_die() {
-    unsigned char b;
-    do {
-        if (secure_random_byte(&b) != 0) {
-            return -1;
-        }
-    } while (b >= 252); // Reject 252-255 to eliminate modulo bias for % 6
-
-    return (b % 6) + 1;
+    // std::random_device natively hooks into /dev/urandom on Linux or CryptGenRandom on Windows.
+    // 'static' ensures we only initialize the entropy pool hook once per run.
+    static std::random_device rd; 
+    
+    // std::uniform_int_distribution automatically handles modulo bias.
+    static std::uniform_int_distribution<int> dist(1, 6);
+    
+    return dist(rd);
 }
 
 // Generate a Diceware code of a specific width (e.g., 5 dice = "43146")
 std::string get_code(int width) {
     std::string code = "";
     for (int i = 0; i < width; i++) {
-        int die = roll_die();
-        if (die == -1) {
-            std::cerr << "[ERROR] Secure RNG failure." << std::endl;
-            exit(1);
-        }
-        code += std::to_string(die);
+        code += std::to_string(roll_die());
     }
     return code;
 }
@@ -170,6 +136,3 @@ int main(int argc, char *argv[]) {
 
     return 0;
 }
-
-// g++ -std=c++11 -O2 diceware.cpp -o diceware
-// g++ -std=c++11 -O2 diceware.cpp -o diceware.exe -lbcrypt
